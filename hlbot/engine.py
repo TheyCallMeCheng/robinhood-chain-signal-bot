@@ -244,9 +244,15 @@ class Engine:
 
         queue = self.store.pending_discoveries(
             config.ENRICH_BATCH_SIZE, config.NEW_LAUNCH_MAX_AGE_H,
-            exclude_protocol="pons-v2")
+            exclude_protocol="pons-v2",
+            fresh_share=config.ENRICH_FRESH_SHARE)
         attempted = [row["address"] for row in queue]
         if attempted:
+            first_pass = sum(row.get("last_enriched") is None for row in queue)
+            max_lag = max(
+                0.0, time.time() - min(row["discovered_at"] for row in queue))
+            log.info("enrichment: %d pools, %d first-pass, max selected lag %.0fs",
+                     len(queue), first_pass, max_lag)
             enriched = dexscreener.pairs_by_address(attempted)
             self.store.touch_discoveries(attempted)
             queued = {row["address"]: row for row in queue}

@@ -194,19 +194,54 @@ class Store:
         return inserted
 
     def pending_discoveries(self, limit=30, max_age_h=6.0,
-                            exclude_protocol=None):
+                            exclude_protocol=None, fresh_share=0.75):
+        """Return a newest-first fast lane plus an oldest-first fairness lane.
+
+        A single oldest-first queue lets a burst of pool creations delay a new
+        launch for hours. Giving every cycle both lanes keeps current launches
+        close to real time without permanently starving older discoveries.
+        """
+        limit = max(0, int(limit))
+        if not limit:
+            return []
         cutoff = time.time() - max_age_h * 3600
-        sql = (
-            "SELECT address, protocol, token0, token1, base_token, creator"
-            " FROM discoveries WHERE discovered_at >= ?")
+        columns = (
+            "address, protocol, token0, token1, base_token, creator,"
+            " block_number, discovered_at, last_enriched")
+        where = "discovered_at >= ?"
         params = [cutoff]
         if exclude_protocol:
-            sql += " AND protocol <> ?"
+            where += " AND protocol <> ?"
             params.append(exclude_protocol)
-        sql += " ORDER BY COALESCE(last_enriched, 0), block_number ASC LIMIT ?"
-        params.append(limit)
-        cur = self.db.execute(sql, params)
-        return [dict(row) for row in cur.fetchall()]
+
+        share = min(1.0, max(0.0, float(fresh_share)))
+        fast_limit = min(limit, max(1, int(round(limit * share)))) if share else 0
+        fast = []
+        if fast_limit:
+            cur = self.db.execute(
+                "SELECT {} FROM discoveries WHERE {}"
+                " AND last_enriched IS NULL"
+                " ORDER BY block_number DESC LIMIT ?".format(columns, where),
+                params + [fast_limit])
+            fast = [dict(row) for row in cur.fetchall()]
+
+        remaining = limit - len(fast)
+        if remaining <= 0:
+            return fast
+
+        fair_where = where
+        fair_params = list(params)
+        if fast:
+            placeholders = ",".join("?" for _ in fast)
+            fair_where += " AND address NOT IN ({})".format(placeholders)
+            fair_params.extend(row["address"] for row in fast)
+        cur = self.db.execute(
+            "SELECT {} FROM discoveries WHERE {}"
+            " ORDER BY CASE WHEN last_enriched IS NULL THEN 0 ELSE 1 END,"
+            " COALESCE(last_enriched, 0), block_number ASC LIMIT ?".format(
+                columns, fair_where),
+            fair_params + [remaining])
+        return fast + [dict(row) for row in cur.fetchall()]
 
     def touch_discoveries(self, addresses):
         now = time.time()

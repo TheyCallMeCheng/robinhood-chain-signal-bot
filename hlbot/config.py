@@ -117,7 +117,10 @@ CHAIN_CONFIRMATIONS = _i("CHAIN_CONFIRMATIONS", 3)
 CHAIN_INITIAL_LOOKBACK = _i("CHAIN_INITIAL_LOOKBACK", 180)
 CHAIN_LOG_CHUNK = _i("CHAIN_LOG_CHUNK", 900)
 CHAIN_MAX_REPLAY = _i("CHAIN_MAX_REPLAY", 5400)
-ENRICH_BATCH_SIZE = _i("ENRICH_BATCH_SIZE", 30)
+ENRICH_BATCH_SIZE = _i("ENRICH_BATCH_SIZE", 120)
+# Most capacity goes to brand-new pools so launch bursts cannot bury them.
+# The remainder is a fairness lane for older first-pass work and refreshes.
+ENRICH_FRESH_SHARE = _f("ENRICH_FRESH_SHARE", 0.75)
 # A raw V4 Initialize is often just another fee-tier pool for an existing
 # token. Count it as a launch only if one of its currencies minted in that tx.
 V4_REQUIRE_SAME_TX_MINT = _b("V4_REQUIRE_SAME_TX_MINT", True)

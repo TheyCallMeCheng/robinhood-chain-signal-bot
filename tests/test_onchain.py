@@ -99,6 +99,26 @@ class DecoderTests(unittest.TestCase):
 
 
 class DiscoveryStoreTests(unittest.TestCase):
+    def test_queue_has_newest_fast_lane_and_oldest_fairness_lane(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = Store(str(Path(directory) / "state.db"))
+            for block in range(1, 9):
+                address = "0x{:040x}".format(block)
+                store.put_discovery({
+                    "pool": address, "protocol": "uniswap-v3",
+                    "token0": "0x" + "bb" * 20,
+                    "token1": config.WRAPPED_NATIVE,
+                    "base_token": "0x" + "bb" * 20,
+                    "block": block, "tx": "0x{:064x}".format(block),
+                    "creator": None,
+                })
+
+            queued = store.pending_discoveries(
+                limit=4, max_age_h=6, fresh_share=0.75)
+            self.assertEqual(
+                [row["block_number"] for row in queued], [8, 7, 6, 1])
+            store.close()
+
     def test_queue_is_durable_and_deduplicated(self):
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "state.db")
