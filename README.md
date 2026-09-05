@@ -12,7 +12,7 @@ Discovery is on-chain and uses the public Robinhood RPC as its source of truth:
 
 - Pons v2 factory `TokenLaunched` events (the emitted bonding-curve address)
 - Uniswap v2 factory `PairCreated` events
-- Uniswap v3 factory `PoolCreated` events
+- Uniswap-compatible v3 `PoolCreated` events (Uniswap and Giga factories)
 - Uniswap v4 PoolManager `Initialize` events (the emitted PoolId), restricted
   to transactions that also mint one of the currencies, so ordinary new fee
   tiers for old tokens are not mislabeled as launches
@@ -99,6 +99,7 @@ The separate state database is
 - Pons v2 factory: `0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e`
 - Uniswap V2 factory: `0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f`
 - Uniswap V3 factory: `0x1f7d7550B1b028f7571E69A784071F0205FD2EfA`
+- Giga V3 factory: `0xeCE6eCD61177336Ea6fB9B17937ac439d85ee20b`
 - Uniswap V4 PoolManager: `0x8366a39cc670b4001a1121b8f6a443a643e40951`
 - Uniswap SwapRouter02: `0xCaf681a66D020601342297493863E78C959E5cb2`
 - Explorer: `https://robinhoodchain.blockscout.com`

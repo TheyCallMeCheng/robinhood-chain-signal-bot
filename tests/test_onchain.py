@@ -1,9 +1,12 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hlbot import config
-from hlbot.chain import _decode_pons, _decode_v2, _decode_v3, _decode_v4
+from hlbot.chain import (
+    _decode_pons, _decode_v2, _decode_v3, _decode_v4, poll_discoveries,
+)
 from hlbot.engine import fomo_token_url
 from hlbot.keccak import keccak256
 from hlbot.pons import BUY_TOPIC, GET_RESERVES, REAL_QUOTE_RESERVE, SELL_TOPIC
@@ -96,6 +99,16 @@ class DecoderTests(unittest.TestCase):
         row = _decode_v4(v4)
         self.assertEqual(row["pool"], pool_id)
         self.assertEqual(row["base_token"], self.token1)
+
+    def test_all_v3_factories_are_polled_in_one_rpc_filter(self):
+        self.assertIn(config.V3_FACTORY, config.V3_FACTORIES)
+        self.assertIn(config.GIGA_V3_FACTORY, config.V3_FACTORIES)
+        with patch("hlbot.chain._logs", return_value=[]) as get_logs:
+            poll_discoveries(100, 100)
+        v3_calls = [call for call in get_logs.call_args_list
+                    if call.args[1] == config.V3_POOL_CREATED_TOPIC]
+        self.assertEqual(len(v3_calls), 1)
+        self.assertEqual(v3_calls[0].args[0], config.V3_FACTORIES)
 
 
 class DiscoveryStoreTests(unittest.TestCase):

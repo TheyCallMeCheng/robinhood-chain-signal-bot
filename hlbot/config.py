@@ -58,6 +58,12 @@ PONS_V2_FACTORY = os.environ.get(
 V2_FACTORY = os.environ.get(
     "V2_FACTORY", "0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f").lower()
 V3_FACTORY = os.environ.get("V3_FACTORY", "0x1f7d7550b1b028f7571e69a784071f0205fd2efa").lower()
+GIGA_V3_FACTORY = "0xece6ecd61177336ea6fb9b17937ac439d85ee20b"
+V3_FACTORIES = list(dict.fromkeys(
+    address.strip().lower() for address in os.environ.get(
+        "V3_FACTORIES", "{},{}".format(V3_FACTORY, GIGA_V3_FACTORY)
+    ).split(",") if address.strip()
+))
 V4_POOL_MANAGER = os.environ.get(
     "V4_POOL_MANAGER", "0x8366a39cc670b4001a1121b8f6a443a643e40951").lower()
 PONS_TOKEN_LAUNCHED_TOPIC = "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607"

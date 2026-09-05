@@ -190,7 +190,9 @@ SOURCES = (
      lambda: config.PONS_TOKEN_LAUNCHED_TOPIC, _decode_pons),
     ("uniswap-v2", lambda: config.V2_FACTORY,
      lambda: config.V2_PAIR_CREATED_TOPIC, _decode_v2),
-    ("uniswap-v3", lambda: config.V3_FACTORY,
+    # eth_getLogs accepts an address array, so all compatible V3 factories are
+    # covered in one RPC call per block chunk without increasing request load.
+    ("uniswap-v3", lambda: config.V3_FACTORIES,
      lambda: config.V3_POOL_CREATED_TOPIC, _decode_v3),
     ("uniswap-v4", lambda: config.V4_POOL_MANAGER,
      lambda: config.V4_INITIALIZE_TOPIC, _decode_v4),
