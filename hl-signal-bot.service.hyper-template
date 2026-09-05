@@ -1,0 +1,17 @@
+[Unit]
+Description=HyperEVM launch + momentum signal bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=REPLACE_USER
+WorkingDirectory=/opt/hl-signal-bot
+ExecStart=/usr/bin/python3 /opt/hl-signal-bot/run.py
+Restart=always
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
